@@ -30,6 +30,8 @@ func main() {
 	domain := flag.String("d", "", "domain to set txt record to")
 	valid := flag.String("valid", "", "valid string")
 	path := flag.String("c", "config.yml", "path to the config file")
+	dryrun_ptr := flag.Bool("dry", false, "dry run, no changes performed")
+
 	flag.Parse()
 
 	c, err := parseConfig(*path)
@@ -54,6 +56,10 @@ func main() {
 		errorLog: errorLog,
 	}
 
+	if *dryrun_ptr {
+		app.infoLog.Println("Running in DRY mode.")
+	}
+
 	err = app.prepareApp()
 	if err != nil {
 		app.errorLog.Println(err)
@@ -65,9 +71,14 @@ func main() {
 		return
 	}
 
+
 	if *valid != "" {
 		app.setAcmeTo(*valid)
-		err = app.postTxtRecords()
+		if *dryrun_ptr {
+			app.infoLog.Println("Would have posted TXT records.")
+		} else {
+			err = app.postTxtRecords()
+		}
 		if err != nil {
 			app.errorLog.Println(err)
 			return
